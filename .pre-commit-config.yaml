@@ -95,6 +95,19 @@ repos:
       - id: python-use-type-annotations
         files: ^src/.*\.py$
 
+  # Dungeon Master - Context tracking for Cursor integration
+  - repo: local
+    hooks:
+      - id: cursor-dungeon-master
+        name: Cursor Dungeon Master Context Tracking
+        entry: dm
+        args: [validate]
+        language: python
+        additional_dependencies: ["cursor-dungeon-master==0.1.0"]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit] # Fixed from [commit]
+        verbose: true
 # Global configuration
 default_language_version:
   python: python3
