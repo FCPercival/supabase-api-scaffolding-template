@@ -6,9 +6,12 @@ from src.api.utils.auth_helpers import handle_auth_error, format_auth_response
 from src.core.messages import ErrorMessages, SuccessMessages
 from src.models.auth import (
     AuthResponse,
+    OAuthLoginRequest,
+    OAuthResponse,
     PasswordResetRequest,
     UserCreate,
     UserLogin,
+    OAuthCallbackRequest,
 )
 from src.services.auth_service import AuthService
 
@@ -83,15 +86,86 @@ async def reset_password(
 
 
 @router.get("/session-check", status_code=status.HTTP_200_OK)
-async def session_check(
-    user_id: str = Depends(get_current_user)
-):
+async def session_check(current_user: str = Depends(get_current_user)):
     """Check if the current session is valid"""
-    # If we reach here, JWT validation passed = session is valid
-    return {"valid": True, "user_id": user_id}
+    return {"valid": True, "user_id": current_user}
 
 
-# TODO: Add OAuth endpoints for production-ready social authentication:
-# - GET /oauth/{provider} - Initiate OAuth login
-# - GET /oauth/{provider}/callback - Handle OAuth callback
-# - Support for Google, GitHub, and other providers via Supabase Auth
+@router.post("/validate-token", status_code=status.HTTP_200_OK)
+async def validate_token(
+    token: str,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Validate a token and return user information"""
+    try:
+        # Set the token in the client and get user info
+        auth_service.client.auth.set_session(token, None)
+        user_response = auth_service.client.auth.get_user()
+        
+        if not user_response or not user_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        user = user_response.user
+        return {
+            "valid": True,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "user_metadata": user.user_metadata,
+                "created_at": user.created_at
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token validation failed: {str(e)}"
+        ) from e
+
+
+@router.post("/oauth/login", response_model=OAuthResponse)
+async def oauth_login(
+    request: OAuthLoginRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Initiate Google OAuth login flow"""
+    try:
+        result = await auth_service.oauth_login(request.provider, request.redirect_url)
+        return OAuthResponse(
+            auth_url=result["auth_url"],
+            state=None
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+    except Exception as e:
+        raise handle_auth_error(e) from e
+
+
+@router.post("/oauth/callback", response_model=AuthResponse)
+async def oauth_callback(
+    request: OAuthCallbackRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Handle Google OAuth callback and exchange code for tokens"""
+    try:
+        result = await auth_service.handle_oauth_callback(
+            request.provider,
+            request.code,
+            request.redirect_url
+        )
+        return format_auth_response(result)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+    except Exception as e:
+        raise handle_auth_error(e) from e
+
+
+

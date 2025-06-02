@@ -111,10 +111,18 @@ def format_auth_response(result: dict) -> dict:
     Returns:
         Formatted auth response with user and token data
     """
+    # Use pre-extracted full_name if available, otherwise extract safely
+    full_name = result["user"].get("full_name", "")
+    if not full_name:
+        # Fallback: safely handle user_metadata which might be string or dict for OAuth users
+        user_metadata = result["user"]["user_metadata"]
+        if isinstance(user_metadata, dict):
+            full_name = user_metadata.get(Supabase.FULL_NAME_FIELD, "")
+    
     user_data = {
         "id": result["user"]["id"],
         "email": result["user"]["email"],
-        "full_name": result["user"]["user_metadata"].get(Supabase.FULL_NAME_FIELD, ""),
+        "full_name": full_name,
         "created_at": result["user"]["created_at"],
     }
 
@@ -125,10 +133,12 @@ def format_auth_response(result: dict) -> dict:
         "token_type": "bearer",
     }
 
-    if result.get("session") and result["session"].get("access_token"):
+    # Safely handle session data which might be dict or other type
+    session_data = result.get("session")
+    if session_data and isinstance(session_data, dict) and session_data.get("access_token"):
         token_data = {
-            "access_token": result["session"]["access_token"],
-            "refresh_token": result["session"]["refresh_token"],
+            "access_token": session_data["access_token"],
+            "refresh_token": session_data["refresh_token"],
             "token_type": "bearer",
         }
 

@@ -35,13 +35,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Defaults.LOG_LEVEL
     USE_GSM: bool = Defaults.USE_GSM
 
-
-
     model_config = {"env_file": ".env", "case_sensitive": True}
-
-
-# TODO: Add OAuth configuration settings for social login:
-# OAUTH_GOOGLE_CLIENT_ID, OAUTH_GOOGLE_CLIENT_SECRET, OAUTH_GITHUB_CLIENT_ID, etc.
 
 
 def get_settings():

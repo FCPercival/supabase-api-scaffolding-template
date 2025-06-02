@@ -1,8 +1,9 @@
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field
 
-from src.core.constants import Validation
+from src.core.constants import Validation, OAuth
 
 
 class UserBase(BaseModel):
@@ -53,7 +54,26 @@ class PasswordResetRequest(BaseModel):
     email: EmailStr
 
 
-# TODO: Add OAuth models:
-# - class OAuthProvider(str, Enum): GOOGLE = "google", GITHUB = "github"
-# - class OAuthLoginRequest(BaseModel): provider, redirect_url
-# - class OAuthCallbackRequest(BaseModel): provider, code, state
+class OAuthProvider(str, Enum):
+    """OAuth provider options"""
+    GOOGLE = OAuth.GOOGLE
+
+
+class OAuthLoginRequest(BaseModel):
+    """OAuth login initiation request"""
+    provider: OAuthProvider
+    redirect_url: str
+
+
+class OAuthCallbackRequest(BaseModel):
+    """OAuth callback request"""
+    provider: OAuthProvider
+    code: str
+    state: str | None = None
+    redirect_url: str
+
+
+class OAuthResponse(BaseModel):
+    """OAuth login response"""
+    auth_url: str
+    state: str | None = None

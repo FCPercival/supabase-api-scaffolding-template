@@ -5,6 +5,7 @@ A production-ready authentication API scaffolding template using FastAPI and Sup
 ## Features
 
 - 🔐 **Email/Password Authentication** - Complete signup, login, logout, password reset
+- 🌟 **Google OAuth** - Social login with Google authentication
 - 🛡️ **JWT Token Validation** - Production-level security with proper token verification
 - 🌐 **Supabase Integration** - Direct integration with Supabase Auth
 - 🔑 **Google Secret Manager** - Production secret management support
@@ -71,6 +72,11 @@ uvicorn src.api.api:app --host 0.0.0.0 --port 8000
 - `POST /api/v1/auth/reset-password` - Request password reset
 - `GET /api/v1/auth/session-check` - Validate session
 
+### Google OAuth
+
+- `POST /api/v1/auth/oauth/login` - Initiate Google OAuth login
+- `POST /api/v1/auth/oauth/callback` - Handle Google OAuth callback
+
 ### System
 
 - `GET /health` - Health check endpoint
@@ -83,6 +89,23 @@ uvicorn src.api.api:app --host 0.0.0.0 --port 8000
    - **Project URL** → `SUPABASE_URL`
    - **anon/public key** → `SUPABASE_KEY`
    - **JWT Secret** → `SUPABASE_JWT_SECRET`
+
+## Setting Up Google OAuth
+
+1. **Google Cloud Console Setup**:
+
+   - Create a project in [Google Cloud Console](https://console.cloud.google.com)
+   - Enable Google+ API
+   - Create OAuth 2.0 credentials
+   - Add authorized redirect URI: `https://your-project-ref.supabase.co/auth/v1/callback`
+   - Add authorized JavaScript origin: `https://your-project-ref.supabase.co`
+
+2. **Supabase Dashboard Setup**:
+   - Go to Authentication → Providers in your Supabase dashboard
+   - Enable Google provider
+   - Add your Google OAuth Client ID and Client Secret
+
+**Note**: Supabase manages the Google OAuth flow completely. You don't need Google OAuth credentials in your FastAPI environment variables.
 
 ## Development
 
@@ -98,14 +121,6 @@ src/
 ├── models/            # Pydantic models
 └── services/          # Business logic
 ```
-
-### Adding OAuth (Future)
-
-OAuth endpoints are ready to be implemented. See TODO comments in:
-
-- `src/api/endpoints/auth.py`
-- `src/services/auth_service.py`
-- `src/models/auth.py`
 
 ## Production Deployment
 

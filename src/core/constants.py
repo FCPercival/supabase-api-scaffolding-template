@@ -58,7 +58,11 @@ class Validation:
 class Supabase:
     """Supabase-specific constants"""
     # Secret names for GSM
-    REQUIRED_SECRETS = ["SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_JWT_SECRET"]
+    REQUIRED_SECRETS = [
+        "SUPABASE_URL", 
+        "SUPABASE_KEY", 
+        "SUPABASE_JWT_SECRET"
+    ]
     
     # User metadata fields
     FULL_NAME_FIELD = "full_name"
@@ -67,7 +71,13 @@ class Supabase:
     SECRET_PATH_TEMPLATE = "projects/{project_id}/secrets/{secret_name}/versions/latest"
 
 
-
+class OAuth:
+    """OAuth provider constants"""
+    GOOGLE = "google"
+    PROVIDERS = [GOOGLE]
+    
+    # Google OAuth scopes
+    GOOGLE_SCOPES = ["openid", "email", "profile"]
 
 
 class Logging:
@@ -83,11 +93,3 @@ class Logging:
     
     # Default level
     DEFAULT_LEVEL = logging.INFO
-
-
-# TODO: Add OAuth constants when implementing social authentication:
-# class OAuth:
-#     """OAuth provider constants"""
-#     GOOGLE = "google"
-#     GITHUB = "github"
-#     PROVIDERS = [GOOGLE, GITHUB] 
