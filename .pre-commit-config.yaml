@@ -98,16 +98,30 @@ repos:
   # Dungeon Master - Context tracking for Cursor integration
   - repo: local
     hooks:
-      - id: cursor-dungeon-master
-        name: Cursor Dungeon Master Context Tracking
+      # Step 1: Create any missing templates
+      - id: cursor-dungeon-master-create
+        name: dungeon master - create missing templates
+        entry: dm
+        args: [update]
+        language: python
+        additional_dependencies: ["cursor-dungeon-master==0.1.0"]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        verbose: true
+
+      # Step 2: Validate all templates (including newly created ones)
+      - id: cursor-dungeon-master-validate
+        name: dungeon master - validate documentation
         entry: dm
         args: [validate]
         language: python
         additional_dependencies: ["cursor-dungeon-master==0.1.0"]
         pass_filenames: false
         always_run: true
-        stages: [pre-commit] # Fixed from [commit]
+        stages: [pre-commit]
         verbose: true
+
 # Global configuration
 default_language_version:
   python: python3
