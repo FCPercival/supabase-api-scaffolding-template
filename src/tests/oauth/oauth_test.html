@@ -138,10 +138,9 @@
         // Check if we're returning from OAuth with a code (PKCE flow)
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get("code");
-        const state = urlParams.get("state");
 
         if (code) {
-          exchangeCodeForTokens(code, state);
+          exchangeCodeForTokens(code);
         }
 
         const hash = window.location.hash;
@@ -260,7 +259,7 @@
         );
       }
 
-      async function exchangeCodeForTokens(code, state) {
+      async function exchangeCodeForTokens(code) {
         try {
           document.getElementById("oauthStatus").textContent =
             "Exchanging Code";
@@ -274,10 +273,6 @@
             code: code,
             redirect_url: REDIRECT_URL,
           };
-
-          if (state) {
-            requestBody.state = state;
-          }
 
           const response = await fetch(
             `${API_BASE}/api/v1/auth/oauth/callback`,

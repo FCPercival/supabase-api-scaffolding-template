@@ -1,8 +1,8 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer
 
-from src.api.dependencies import get_auth_service, get_current_user
-from src.api.utils.auth_helpers import handle_auth_error, format_auth_response
+from src.api.dependencies import get_auth_service, get_current_user, security
+from src.core.constants import Supabase
 from src.core.messages import ErrorMessages, SuccessMessages
 from src.models.auth import (
     AuthResponse,
@@ -16,7 +16,76 @@ from src.models.auth import (
 from src.services.auth_service import AuthService
 
 router = APIRouter()
-security = HTTPBearer()
+logger = logging.getLogger(__name__)
+
+
+def handle_auth_error(e: Exception) -> HTTPException:
+    """
+    Convert auth errors to appropriate HTTP exceptions
+    
+    Args:
+        e: Exception from auth operation
+        
+    Returns:
+        HTTPException with appropriate status code and message
+    """
+    if isinstance(e, ValueError):
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    
+    return HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"Authentication error: {e!s}",
+    )
+
+
+def format_auth_response(result: dict) -> dict:
+    """
+    Format Supabase auth result into standardized response
+    
+    Args:
+        result: Raw result from Supabase auth operation
+        
+    Returns:
+        Formatted auth response with user and token data
+    """
+    # Use pre-extracted full_name if available, otherwise extract safely
+    full_name = result["user"].get("full_name", "")
+    if not full_name:
+        # Fallback: safely handle user_metadata which might be string or dict for OAuth users
+        user_metadata = result["user"]["user_metadata"]
+        if isinstance(user_metadata, dict):
+            full_name = user_metadata.get(Supabase.FULL_NAME_FIELD, "")
+    
+    user_data = {
+        "id": result["user"]["id"],
+        "email": result["user"]["email"],
+        "full_name": full_name,
+        "created_at": result["user"]["created_at"],
+    }
+
+    # Handle optional session data
+    token_data = {
+        "access_token": "",
+        "refresh_token": "",
+        "token_type": "bearer",
+    }
+
+    # Safely handle session data which might be dict or other type
+    session_data = result.get("session")
+    if session_data and isinstance(session_data, dict) and session_data.get("access_token"):
+        token_data = {
+            "access_token": session_data["access_token"],
+            "refresh_token": session_data["refresh_token"],
+            "token_type": "bearer",
+        }
+
+    return {
+        "user": user_data,
+        "token": token_data,
+    }
 
 
 @router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
@@ -52,7 +121,7 @@ async def login(
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
-    token: HTTPBearer = Depends(security),
+    token = Depends(security),
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Log out the current user"""
@@ -91,40 +160,6 @@ async def session_check(current_user: str = Depends(get_current_user)):
     return {"valid": True, "user_id": current_user}
 
 
-@router.post("/validate-token", status_code=status.HTTP_200_OK)
-async def validate_token(
-    token: str,
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    """Validate a token and return user information"""
-    try:
-        # Set the token in the client and get user info
-        auth_service.client.auth.set_session(token, None)
-        user_response = auth_service.client.auth.get_user()
-        
-        if not user_response or not user_response.user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
-        
-        user = user_response.user
-        return {
-            "valid": True,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "user_metadata": user.user_metadata,
-                "created_at": user.created_at
-            }
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token validation failed: {str(e)}"
-        ) from e
-
-
 @router.post("/oauth/login", response_model=OAuthResponse)
 async def oauth_login(
     request: OAuthLoginRequest,
@@ -134,8 +169,7 @@ async def oauth_login(
     try:
         result = await auth_service.oauth_login(request.provider, request.redirect_url)
         return OAuthResponse(
-            auth_url=result["auth_url"],
-            state=None
+            auth_url=result["auth_url"]
         )
     except ValueError as e:
         raise HTTPException(

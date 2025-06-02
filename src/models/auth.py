@@ -16,7 +16,7 @@ class UserCreate(UserBase):
     """User creation schema"""
 
     password: str = Field(..., min_length=Validation.MIN_PASSWORD_LENGTH)
-    full_name: str = Field(..., min_length=Validation.MIN_NAME_LENGTH)
+    full_name: str = Field(..., min_length=1)
 
 
 class UserLogin(UserBase):
@@ -69,11 +69,9 @@ class OAuthCallbackRequest(BaseModel):
     """OAuth callback request"""
     provider: OAuthProvider
     code: str
-    state: str | None = None
     redirect_url: str
 
 
 class OAuthResponse(BaseModel):
     """OAuth login response"""
     auth_url: str
-    state: str | None = None

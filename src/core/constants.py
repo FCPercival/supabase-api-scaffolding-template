@@ -4,7 +4,6 @@ Core constants for the Supabase Auth API
 This module contains essential configuration constants that are used
 across multiple modules in the application.
 """
-import logging
 
 
 class EnvVars:
@@ -50,9 +49,6 @@ class Validation:
     """Validation rules and constraints"""
     # Password requirements
     MIN_PASSWORD_LENGTH = 8
-    
-    # Name requirements
-    MIN_NAME_LENGTH = 1
 
 
 class Supabase:
@@ -74,22 +70,6 @@ class Supabase:
 class OAuth:
     """OAuth provider constants"""
     GOOGLE = "google"
-    PROVIDERS = [GOOGLE]
-    
-    # Google OAuth scopes
-    GOOGLE_SCOPES = ["openid", "email", "profile"]
 
 
-class Logging:
-    """Logging configuration"""
-    # Log levels mapping
-    LEVELS = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-        "CRITICAL": logging.CRITICAL,
-    }
-    
-    # Default level
-    DEFAULT_LEVEL = logging.INFO
+

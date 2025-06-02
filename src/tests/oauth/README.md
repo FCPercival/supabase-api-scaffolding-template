@@ -2,24 +2,28 @@
 
 This directory contains tools for testing Google OAuth integration with Supabase.
 
-## Simplified OAuth Flow
+## OAuth PKCE Flow
 
-This implementation uses **Supabase's built-in OAuth handling** - no manual code exchange, no PKCE complexity, no state management.
+This implementation uses **Supabase's built-in PKCE handling** with a backend callback for security.
 
 ### How It Works
 
 1. **Initiate OAuth**: Call `/api/v1/auth/oauth/login` to get Google OAuth URL
 2. **Redirect to Google**: User authenticates with Google
-3. **Supabase Handles Everything**: Supabase processes the OAuth callback internally
-4. **Success Redirect**: User returns to your app with tokens in URL parameters
+3. **Google Returns Code**: User returns with authorization code in URL
+4. **Exchange Code**: Frontend calls `/api/v1/auth/oauth/callback` to exchange code for tokens
+5. **Backend Handles PKCE**: Supabase exchanges code for session tokens using stored PKCE verifier
 
 ### API Endpoints
 
 - `POST /api/v1/auth/oauth/login` - Get Google OAuth URL
+
   - Request: `{"provider": "google", "redirect_url": "http://localhost:3000/oauth_test.html"}`
   - Response: `{"auth_url": "https://accounts.google.com/oauth/..."}`
 
-That's it! No callback endpoint needed.
+- `POST /api/v1/auth/oauth/callback` - Exchange authorization code for tokens
+  - Request: `{"provider": "google", "code": "auth_code_here", "redirect_url": "..."}`
+  - Response: `{"user": {...}, "token": {"access_token": "...", "refresh_token": "..."}}`
 
 ## Testing
 
@@ -44,14 +48,24 @@ That's it! No callback endpoint needed.
    - Authenticate with Google
    - Get redirected back with success tokens in URL
 
-### Success Parameters
+### Success Response
 
-After successful OAuth, you'll be redirected back with URL parameters like:
+After successful OAuth, the test page will display tokens received from your backend:
 
-- `access_token` - Use this for API calls
-- `refresh_token` - Use this to get new access tokens
-- `expires_in` - Token expiration time
-- `type` - Usually "bearer"
+```json
+{
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "full_name": "User Name"
+  },
+  "token": {
+    "access_token": "jwt_token_here",
+    "refresh_token": "refresh_token_here",
+    "token_type": "bearer"
+  }
+}
+```
 
 ## Configuration Required
 
@@ -73,13 +87,14 @@ No Google OAuth environment variables needed in your app - Supabase handles the 
 
 ## Troubleshooting
 
-**No success parameters in URL?**
+**Not getting tokens?**
 
-- Check Supabase provider configuration
-- Verify Google Cloud Console redirect URI
-- Check browser network tab for errors
+- Check Supabase provider configuration in dashboard
+- Verify Google Cloud Console redirect URI: `https://your-project.supabase.co/auth/v1/callback`
+- Check browser network tab for API errors
+- Ensure FastAPI server is running on port 8000
 
-**Still getting code/state in URL?**
+**Getting authorization code but token exchange fails?**
 
-- Make sure you're using the correct Supabase redirect URI in Google Console
-- The redirect should go to Supabase, not your app directly
+- Check that the same Supabase client instance is used (singleton pattern)
+- Verify the redirect URL matches exactly between login and callback requests

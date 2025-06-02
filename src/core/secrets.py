@@ -53,5 +53,4 @@ def load_secrets_from_gsm() -> None:
 
 
 def should_use_gsm() -> bool:
-    """Check if Google Secret Manager should be used"""
     return os.environ.get(EnvVars.USE_GSM, "false").lower() in ("true", "1", "t") 

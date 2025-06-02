@@ -11,8 +11,7 @@ class ErrorMessages:
     INVALID_CREDENTIALS = "Invalid email or password"
     INVALID_TOKEN = "Invalid authentication token"
     INVALID_TOKEN_MISSING_USER = "Invalid token: missing user identifier"
-    SESSION_EXPIRED = "Session expired or invalid. Please login again."
-    USER_NOT_FOUND = "User not found. Session may be invalid."
+
     LOGOUT_FAILED = "Failed to log out"
     REGISTRATION_FAILED = "Registration failed"
     AUTHENTICATION_FAILED = "Authentication failed"
@@ -45,5 +44,4 @@ class LogMessages:
     
     # JWT validation
     JWT_MISSING_SUB = "Token is valid but missing 'sub' claim"
-    JWT_VALIDATION_FAILED = "JWT validation failed: {error}"
-    SESSION_VALIDATION_FAILED = "Supabase session validation failed: {error}" 
+    JWT_VALIDATION_FAILED = "JWT validation failed: {error}" 
