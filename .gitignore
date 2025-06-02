@@ -143,6 +143,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Ruff cache
+.ruff_cache/
+
 # Pyre type checker
 .pyre/
 
@@ -272,4 +275,4 @@ local/
 
 # Cache directories
 .cache/
-cache/ 
+cache/
