@@ -1,3 +1,5 @@
+# @track_context("config.md")
+
 from supabase import Client, create_client
 
 from src.core.config import settings

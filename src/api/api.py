@@ -1,3 +1,5 @@
+# @track_context("api_setup.md")
+
 import logging
 
 from fastapi import FastAPI
@@ -29,6 +31,6 @@ app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Simple health check endpoint"""
     return {"status": "healthy", "version": "0.1.0"}

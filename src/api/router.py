@@ -1,3 +1,5 @@
+# @track_context("api_setup.md")
+
 from fastapi import APIRouter
 
 from src.api.endpoints import auth

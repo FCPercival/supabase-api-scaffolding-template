@@ -1,3 +1,5 @@
+# @track_context("core_constants.md")
+
 """
 Core constants for the Supabase Auth API
 
