@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from src.core.constants import OAuth, Supabase
 from src.core.messages import ErrorMessages, LogMessages
@@ -11,10 +12,10 @@ logger = logging.getLogger(__name__)
 class AuthService:
     """Service for authentication operations"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client = get_supabase_client()
 
-    async def signup(self, user_data: UserCreate) -> dict:
+    async def signup(self, user_data: UserCreate) -> dict[str, Any]:
         """Register a new user in Supabase Auth"""
         try:
             auth_response = self.client.auth.sign_up(
@@ -30,7 +31,9 @@ class AuthService:
             )
 
             if not hasattr(auth_response, "user") or not auth_response.user:
-                raise ValueError(f"{ErrorMessages.REGISTRATION_FAILED}: Could not create user")
+                raise ValueError(
+                    f"{ErrorMessages.REGISTRATION_FAILED}: Could not create user"
+                )
 
             logger.info(LogMessages.USER_CREATED.format(user_id=auth_response.user.id))
 
@@ -40,7 +43,7 @@ class AuthService:
             logger.error(f"Signup error: {e!s}")
             raise ValueError(f"{ErrorMessages.REGISTRATION_FAILED}: {e!s}") from e
 
-    async def login(self, user_data: UserLogin) -> dict:
+    async def login(self, user_data: UserLogin) -> dict[str, Any]:
         """Authenticate a user with email and password"""
         try:
             auth_response = self.client.auth.sign_in_with_password(
@@ -55,9 +58,13 @@ class AuthService:
                 or not auth_response.user
                 or not auth_response.session
             ):
-                raise ValueError(f"{ErrorMessages.AUTHENTICATION_FAILED}: Invalid credentials")
+                raise ValueError(
+                    f"{ErrorMessages.AUTHENTICATION_FAILED}: Invalid credentials"
+                )
 
-            logger.info(LogMessages.USER_LOGGED_IN.format(user_id=auth_response.user.id))
+            logger.info(
+                LogMessages.USER_LOGGED_IN.format(user_id=auth_response.user.id)
+            )
             return self._build_auth_dict(auth_response)
 
         except Exception as e:
@@ -81,48 +88,46 @@ class AuthService:
             logger.error(f"Password reset error: {e!s}")
             return False
 
-    async def oauth_login(self, provider: str, redirect_url: str) -> dict:
+    async def oauth_login(self, provider: str, redirect_url: str) -> dict[str, Any]:
         """Initiate OAuth login flow - let Supabase handle PKCE"""
         if provider != OAuth.GOOGLE:
             raise ValueError(f"Unsupported provider: {provider}")
-        
-        # Let Supabase handle PKCE internally - just pass the redirect URL
-        auth_response = self.client.auth.sign_in_with_oauth({
-            "provider": "google",
-            "options": {
-                "redirect_to": redirect_url
-            }
-        })
-        
-        return {
-            "auth_url": auth_response.url
-        }
 
-    async def handle_oauth_callback(self, provider: str, code: str, redirect_url: str) -> dict:
+        # Let Supabase handle PKCE internally - just pass the redirect URL
+        auth_response = self.client.auth.sign_in_with_oauth(
+            {"provider": "google", "options": {"redirect_to": redirect_url}}
+        )
+
+        return {"auth_url": auth_response.url}
+
+    async def handle_oauth_callback(
+        self, provider: str, code: str, redirect_url: str
+    ) -> dict[str, Any]:
         """Handle OAuth callback - let Supabase handle PKCE code exchange"""
         if provider != OAuth.GOOGLE:
             raise ValueError(f"Unsupported provider: {provider}")
-        
+
         try:
             # Pass proper CodeExchangeParams format - Supabase will get code_verifier from storage
-            code_exchange_params = {
-                "auth_code": code,
-                "redirect_to": redirect_url
-            }
-            
-            auth_response = self.client.auth.exchange_code_for_session(code_exchange_params)
-            
+            code_exchange_params = {"auth_code": code, "redirect_to": redirect_url}
+
+            auth_response = self.client.auth.exchange_code_for_session(
+                code_exchange_params
+            )
+
             if not auth_response.user or not auth_response.session:
                 raise ValueError("Failed to exchange code for session")
-            
-            logger.info(LogMessages.USER_LOGGED_IN.format(user_id=auth_response.user.id))
+
+            logger.info(
+                LogMessages.USER_LOGGED_IN.format(user_id=auth_response.user.id)
+            )
             return self._build_auth_dict(auth_response)
-            
+
         except Exception as e:
             logger.error(f"OAuth callback error: {e!s}")
             raise ValueError(f"OAuth authentication failed: {e!s}") from e
 
-    def _build_auth_dict(self, auth_response) -> dict:
+    def _build_auth_dict(self, auth_response: Any) -> dict[str, Any]:
         """Build auth dict in format expected by format_auth_response helper"""
         user_metadata = auth_response.user.user_metadata
         if isinstance(user_metadata, str):
@@ -130,11 +135,11 @@ class AuthService:
             user_metadata = {}
         elif user_metadata is None:
             user_metadata = {}
-        
+
         full_name = ""
         if isinstance(user_metadata, dict):
             full_name = user_metadata.get(Supabase.FULL_NAME_FIELD, "")
-        
+
         user_dict = {
             "id": auth_response.user.id,
             "email": auth_response.user.email,
@@ -146,9 +151,9 @@ class AuthService:
         session_dict = {}
         if auth_response.session:
             session_obj = auth_response.session
-            access_token = getattr(session_obj, 'access_token', None)
-            refresh_token = getattr(session_obj, 'refresh_token', None)
-            
+            access_token = getattr(session_obj, "access_token", None)
+            refresh_token = getattr(session_obj, "refresh_token", None)
+
             if access_token:
                 session_dict = {
                     "access_token": access_token,

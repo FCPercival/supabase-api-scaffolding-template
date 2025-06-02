@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field
 
-from src.core.constants import Validation, OAuth
+from src.core.constants import OAuth, Validation
 
 
 class UserBase(BaseModel):
@@ -56,17 +56,20 @@ class PasswordResetRequest(BaseModel):
 
 class OAuthProvider(str, Enum):
     """OAuth provider options"""
+
     GOOGLE = OAuth.GOOGLE
 
 
 class OAuthLoginRequest(BaseModel):
     """OAuth login initiation request"""
+
     provider: OAuthProvider
     redirect_url: str
 
 
 class OAuthCallbackRequest(BaseModel):
     """OAuth callback request"""
+
     provider: OAuthProvider
     code: str
     redirect_url: str
@@ -74,4 +77,5 @@ class OAuthCallbackRequest(BaseModel):
 
 class OAuthResponse(BaseModel):
     """OAuth login response"""
+
     auth_url: str

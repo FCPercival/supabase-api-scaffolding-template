@@ -57,12 +57,14 @@ repos:
     hooks:
       - id: mypy
         files: ^src/.*\.py$
-        args: [--ignore-missing-imports, --disallow-untyped-defs]
+        args: [--config-file, pyproject.toml]
         additional_dependencies:
-          - types-requests
-          - pydantic
           - fastapi
-          - httpx
+          - pydantic
+          - pydantic-settings
+          - google-cloud-secret-manager
+          - types-python-jose
+          - types-requests
 
   # Prettier - Format JSON, YAML, Markdown
   - repo: https://github.com/pre-commit/mirrors-prettier

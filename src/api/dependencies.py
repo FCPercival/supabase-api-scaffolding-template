@@ -1,4 +1,6 @@
 import logging
+from typing import Any
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -14,19 +16,19 @@ security = HTTPBearer()
 def validate_jwt_token(token: str) -> str:
     """
     Extract and validate JWT token, return user_id
-    
+
     Args:
         token: JWT token string
-        
+
     Returns:
         user_id extracted from token
-        
+
     Raises:
         HTTPException: If token is invalid
     """
     try:
         # Decode and verify token
-        payload = jwt.decode(
+        payload: dict[str, Any] = jwt.decode(
             token,
             settings.SUPABASE_JWT_SECRET,
             algorithms=["HS256"],
@@ -40,7 +42,7 @@ def validate_jwt_token(token: str) -> str:
         )
 
         # Extract user_id from sub claim
-        user_id = payload.get("sub")
+        user_id: Any = payload.get("sub")
         if not user_id:
             logger.warning(LogMessages.JWT_MISSING_SUB)
             raise HTTPException(
@@ -48,7 +50,7 @@ def validate_jwt_token(token: str) -> str:
                 detail=ErrorMessages.INVALID_TOKEN_MISSING_USER,
             )
 
-        return user_id
+        return str(user_id)
 
     except JWTError as err:
         logger.warning(LogMessages.JWT_VALIDATION_FAILED.format(error=err))
