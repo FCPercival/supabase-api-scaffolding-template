@@ -95,32 +95,35 @@ repos:
       - id: python-use-type-annotations
         files: ^src/.*\.py$
 
-  # Dungeon Master - Context tracking for Cursor integration
+  # 🏰 Dungeon Master - Complete context tracking workflow
   - repo: local
     hooks:
-      # Step 1: Create any missing templates
-      - id: cursor-dungeon-master-create
-        name: dungeon master - create missing templates
+      # Step 1: Create missing templates
+      - id: dungeon-master-update
+        name: "📜 DM: Create templates"
         entry: dm
         args: [update]
-        language: python
-        additional_dependencies: ["cursor-dungeon-master==0.1.0"]
+        language: system
         pass_filenames: false
         always_run: true
-        stages: [pre-commit]
-        verbose: true
 
-      # Step 2: Validate all templates (including newly created ones)
-      - id: cursor-dungeon-master-validate
-        name: dungeon master - validate documentation
+      # Step 2: Check significant changes
+      - id: dungeon-master-review
+        name: "🔮 DM: Review changes"
+        entry: dm
+        args: [review]
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Step 3: Final validation
+      - id: dungeon-master-validate
+        name: "🛡️ DM: Validate docs"
         entry: dm
         args: [validate]
-        language: python
-        additional_dependencies: ["cursor-dungeon-master==0.1.0"]
+        language: system
         pass_filenames: false
         always_run: true
-        stages: [pre-commit]
-        verbose: true
 
 # Global configuration
 default_language_version:

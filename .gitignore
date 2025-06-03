@@ -274,3 +274,4 @@ local/
 .cache/
 cache/
 .ruff_cache/
+lore_cache.json
